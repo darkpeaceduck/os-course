@@ -5,7 +5,7 @@
 
 	.section .bootstrap, "ax"
 	.code32
-	.global videomem_puts, videomem_putchar, videomem_clrscr
+	.global videomem_puts, videomem_putchar, videomem_clrscr, check_it
 
 videomem_putchar_at:
 	movl 8(%esp), %eax     // store row number in eax
@@ -129,3 +129,11 @@ videomem_clrscr:
 	movb $0, %al
 	outb %al, %dx
 	ret
+
+check_it:
+	call newline
+	call videomem_empty_line
+	ret
+srin:
+	.asciz "SANYA\n";
+

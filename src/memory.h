@@ -18,11 +18,19 @@
 
 #include <stdint.h>
 
-static inline uintptr_t kernel_phys(void *addr)
-{ return KERNEL_PHYS((uintptr_t)addr); }
+static inline uintptr_t kernel_phys(void *addr) {
+	return KERNEL_PHYS((uintptr_t )addr);
+}
 
-static inline void *kernel_virt(uintptr_t addr)
-{ return (void *)KERNEL_VIRT(addr); }
+static inline void *kernel_virt(uintptr_t addr) {
+	return (void *) KERNEL_VIRT(addr);
+}
+
+static inline void fill_mem(void * ptr, uint8_t value, int64_t size) {
+	for (char * _ptr = (char *) ptr; _ptr - ((char *) ptr) < size; _ptr++) {
+		*_ptr = value;
+	}
+}
 
 #endif /*__ASM_FILE__*/
 
