@@ -2,7 +2,7 @@
 #define STRINGS_H_
 
 void itoa(char *buf, int base, int d);
-int strcomp(const char *f, const char *s, int len);
+int strncmp(const char *f, const char *s, int len);
 void printf(void (*putchar)(char c), char * format, ...);
 
 

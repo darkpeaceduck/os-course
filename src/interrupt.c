@@ -7,6 +7,7 @@ static idt_entry_t idt_entries[IDT_SIZE];
 static idt_ptr_t idt_ptr;
 
 DO_WRAP(default_handler){
+	pic_eoi(0);
 }
 
 void idt_set_gate(uint8_t id, uint64_t adress, uint16_t selector, uint8_t type){

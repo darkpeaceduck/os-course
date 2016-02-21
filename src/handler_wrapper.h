@@ -36,7 +36,7 @@
 	pop %rcx ;\
 	pop %rax ;\
 
-#define ASM_WRAPPER(name) __asm__ ( \
+#define ASM_WRAPPER(name) __asm__  ( \
 						EXPAND(WRAP(name))": \n" \
 						EXPAND(PUSH_ALL) \
 						"call " #name " \n" \

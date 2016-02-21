@@ -103,7 +103,7 @@ void printf(void (*putchar)(char c), const char *format, ...) {
 	}
 }
 
-int strcomp(const char *f, const char *s, int len) {
+int strncmp(const char *f, const char *s, int len) {
 	int i;
 	for (i = 0; i < len; i++) {
 		if (f[i] != s[i]) {
