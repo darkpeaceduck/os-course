@@ -43,8 +43,20 @@
 						EXPAND(POP_ALL) \
 						"iretq")
 
+#define ER_ASM_WRAPPER(name) __asm__  ( \
+						EXPAND(WRAP(name))": \n" \
+						EXPAND(PUSH_ALL) \
+						"call " #name " \n" \
+						EXPAND(POP_ALL) \
+						"add $8, %rsp \n" \
+						"iretq")
+
 #define DO_WRAP(name) VOID_FUNC(WRAP(name)); \
 					 ASM_WRAPPER(name); \
+					 VOID_FUNC(name)
+
+#define ER_DO_WRAP(name) VOID_FUNC(WRAP(name)); \
+					 ER_ASM_WRAPPER(name); \
 					 VOID_FUNC(name)
 
 #endif /* HANDLER_WRAPPER_H_ */
