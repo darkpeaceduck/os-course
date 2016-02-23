@@ -4,11 +4,12 @@
 
 #define WRAP(name) name ## _wrapper
 
+#define PUSHED_REG_NUM 15
+
 #define PUSH_ALL push %rax ;\
 	push %rcx ;\
 	push %rdx ;\
 	push %rbx ;\
-	push %rbp ;\
 	push %rsi ;\
 	push %rdi ;\
 	push %r8 ;\
@@ -30,7 +31,6 @@
 	pop %r8 ;\
 	pop %rdi ;\
 	pop %rsi ;\
-	pop %rbp ;\
 	pop %rbx ;\
 	pop %rdx ;\
 	pop %rcx ;\
@@ -38,16 +38,20 @@
 
 #define ASM_WRAPPER(name) __asm__  ( \
 						EXPAND(WRAP(name))": \n" \
+						"push %rbp \n mov %rsp,%rbp \n" \
 						EXPAND(PUSH_ALL) \
 						"call " #name " \n" \
 						EXPAND(POP_ALL) \
+						"pop %rbp \n" \
 						"iretq")
 
 #define ER_ASM_WRAPPER(name) __asm__  ( \
 						EXPAND(WRAP(name))": \n" \
+						"push %rbp \n mov %rsp,%rbp \n" \
 						EXPAND(PUSH_ALL) \
 						"call " #name " \n" \
 						EXPAND(POP_ALL) \
+						"pop %rbp \n" \
 						"add $8, %rsp \n" \
 						"iretq")
 
