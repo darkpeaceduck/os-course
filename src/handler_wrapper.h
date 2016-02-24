@@ -47,12 +47,12 @@
 
 #define ER_ASM_WRAPPER(name) __asm__  ( \
 						EXPAND(WRAP(name))": \n" \
+						"add $8, %rsp \n" \
 						"push %rbp \n mov %rsp,%rbp \n" \
 						EXPAND(PUSH_ALL) \
 						"call " #name " \n" \
 						EXPAND(POP_ALL) \
 						"pop %rbp \n" \
-						"add $8, %rsp \n" \
 						"iretq")
 
 #define DO_WRAP(name) VOID_FUNC(WRAP(name)); \
