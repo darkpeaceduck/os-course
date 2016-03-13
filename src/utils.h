@@ -11,4 +11,11 @@
 #define VOID_FUNC(name) void name()
 #define CHECK_FLAG(x, value) ((x & value) > 0)
 
+#define CONTAINER_OF(ptr, type, member) \
+	(type *)( (char *)(ptr) - offsetof(type, member) )
+
+#define MIN(a, b) (a < b ? a : b)
+
+#define MAX(a, b) (a > b ? a : b)
+
 #endif
