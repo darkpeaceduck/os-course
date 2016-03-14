@@ -5,6 +5,7 @@
 #include "memory.h"
 #include "utils.h"
 #include "buddy_allocator.h"
+#include "print.h"
 
 #define SLAB_BIG_BOUND ( PAGE_SIZE >> 3)
 
@@ -38,7 +39,7 @@ static slab_t * slab_init_small(uint64_t size, uint64_t align){
 	ret->size = size;
 	list_init(&ret->desc_list);
 	for(virt_t i = get_aligned_addr(((virt_t)page) + sizeof(slab_t), align);
-			   i < ((virt_t)page) + PAGE_SIZE;
+			   i < ((virt_t)page) + PAGE_SIZE - sizeof(slab_small_descriptor_t) + size ;
 			   i = get_aligned_addr(i + sizeof(slab_small_descriptor_t) + size,
 					   align) ){
 		slab_small_descriptor_t * new_desc = (slab_small_descriptor_t * ) i;
@@ -85,7 +86,7 @@ static slab_t * slab_init_big(uint64_t size, uint64_t align){
 	}
 	buddy_set_slab(page, ret);
 	for(virt_t i = get_aligned_addr((virt_t) page, align);
-			i < ((virt_t)page) + PAGE_SIZE;
+			i < ((virt_t)page) + PAGE_SIZE - size;
 			i = get_aligned_addr(i + size, align)){
 		slab_create_big_desc(ret, i);
 	}
@@ -106,7 +107,6 @@ static void * slab_allocate_big(slab_t * slab){
 static void slab_free_big(slab_t * slab, void * addr){
 	slab_create_big_desc(slab, (virt_t) addr);
 }
-
 
 slab_t * slab_init(uint64_t size, uint64_t align){
 	if(size >= PAGE_SIZE) {
