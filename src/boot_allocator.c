@@ -17,7 +17,7 @@ static int addr_in_bounds(uint64_t addr){
 }
 
 void * boot_allocator_alloc(uint64_t size, uint64_t align){
-	virt_t new_addr;
+	virt_t new_addr = current_addr;
 	if(align && current_addr % align)
 		new_addr = (current_addr / align + 1) * align;
 	void * ret = (void *)new_addr;
