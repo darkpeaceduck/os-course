@@ -28,6 +28,10 @@ static inline bool pte_large(pte_t pte)
 static inline phys_t pte_phys(pte_t pte)
 { return (phys_t)((pte >> 12) & 0xfffffffffull); }
 
+static inline pte_t* pte_level_addr(pte_t pte){
+	return (pte_t *) va(pte_phys(pte) << 12);
+}
+
 static inline int pml4_i(virt_t addr)
 { return (int)((addr >> 39) & 0x1ff); }
 
@@ -69,5 +73,7 @@ static inline void flush_tlb_addr(virt_t addr)
 
 static inline void flush_tlb(void)
 { store_pml4(load_pml4()); }
+
+void paging_init();
 
 #endif /*__PAGING_H__*/

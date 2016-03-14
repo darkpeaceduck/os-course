@@ -13,7 +13,8 @@ ADEP:= $(ASM:.S=.d)
 SRC := main.c pic.c interrupt.c pit.c video.c uart.c \
 	backtrace.c print.c mmap.c \
 	boot_allocator.c list.c buddy_allocator.c \
-	slab_allocator.c allocator.c
+	slab_allocator.c allocator.c \
+	paging.c
 OBJ := $(AOBJ) $(SRC:.c=.o)
 DEP := $(ADEP) $(SRC:.c=.d)
 

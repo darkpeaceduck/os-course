@@ -8,6 +8,7 @@
 #include "backtrace.h"
 #include "mmap.h"
 #include "allocator.h"
+#include "paging.h"
 #include <stddef.h>
 
 void main(void)
@@ -20,6 +21,7 @@ void main(void)
 	mmap_init();
 	mmap_print();
 	allocator_init();
+	paging_init();
 
 	sti();
 	while (1);

@@ -1,6 +1,6 @@
 #ifndef SRC_BUDDY_ALLOCATOR_H_
 #define SRC_BUDDY_ALLOCATOR_H_
-
+#include <stdint.h>
 
 uint64_t buddy_get_component_size();
 void * buddy_allocate_page(uint32_t level);

@@ -3,6 +3,7 @@
 
 #define PAGE_BITS         12
 #define PAGE_SIZE         (1 << 12)
+#define PAGE_SIZE_2M      (1 << 21)
 #define PAGE_MASK         (PAGE_SIZE - 1)
 #define KERNEL_BASE       0xffffffff80000000
 #define HIGH_BASE         0xffff800000000000
