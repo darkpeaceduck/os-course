@@ -23,7 +23,6 @@ static void add_map_entry(pte_t * pml4 , phys_t paddr, virt_t virtaddr){
 	rewrite_entry(pdpte, PTE_PRESENT | PTE_WRITE);
 	pte_t * pde = pte_level_addr(*pdpte) + pml2_i(virtaddr);
 	rewrite_addr_with_flags(pde, paddr, PTE_PRESENT | PTE_WRITE | PTE_LARGE);
-	flush_tlb_addr(virtaddr);
 }
 
 void paging_init(){
