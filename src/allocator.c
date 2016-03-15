@@ -6,6 +6,7 @@
 #include "slab_allocator.h"
 #include "print.h"
 #include "memory.h"
+#include "paging.h"
 
 typedef struct {
 	slab_pool * slab_pool;
@@ -16,7 +17,7 @@ static slab_t * desc_slab;
 static struct list_head pools;
 
 int allocator_init(){
-	boot_allocator_init( buddy_get_component_size());
+	boot_allocator_init( buddy_get_component_size() + paging_get_component_size());
 	if(buddy_allocator_init())
 		return -1;
 
