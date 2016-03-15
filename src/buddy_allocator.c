@@ -114,6 +114,7 @@ int buddy_allocator_init() {
 		all_discriptors[i].available = 0;
 		all_discriptors[i].addr = i * PAGE_SIZE;
 		all_discriptors[i].slab = NULL;
+		all_discriptors[i].level = 0;
 		list_init(&all_discriptors[i].list_desriptors);
 	}
 	for(uint32_t i = 0; i < level_sz; i++){
@@ -125,7 +126,7 @@ int buddy_allocator_init() {
 	for(uint32_t i = 0; i < discriptors_sz; i++){
 		new_page_entry.addr = all_discriptors[i].addr;
 		if(mmap_is_block_in_available_mem(&new_page_entry)){
-			export_page(i, 0);
+			buddy_free_page(va(all_discriptors[i].addr));
 		}
 	}
 
