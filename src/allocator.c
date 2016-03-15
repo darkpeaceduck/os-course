@@ -4,6 +4,7 @@
 #include "buddy_allocator.h"
 #include "boot_allocator.h"
 #include "slab_allocator.h"
+#include "print.h"
 #include "memory.h"
 
 typedef struct {
@@ -68,6 +69,7 @@ void free(void * ptr){
 	slab_t * slab = buddy_get_slab(ptr);
 	if(slab == NULL){
 		buddy_free_page(ptr);
+	} else {
+		slab_free(slab, ptr);
 	}
-	slab_free(slab, ptr);
 }
