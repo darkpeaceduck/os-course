@@ -18,15 +18,20 @@ static void rewrite_entry(pte_t * addr, int page_flags){
 
 static void add_map_entry(pte_t * pml4 , phys_t paddr, virt_t virtaddr){
 	pte_t * pml4e = pml4 + pml4_i(virtaddr);
-	rewrite_entry(pml4e, PTE_PRESENT | PTE_WRITE);
+	if(!pte_present(*pml4e)){
+		rewrite_entry(pml4e, PTE_PRESENT | PTE_WRITE);
+	}
 	pte_t * pdpte = pte_level_addr(*pml4e) + pml3_i(virtaddr);
-	rewrite_entry(pdpte, PTE_PRESENT | PTE_WRITE);
+	if(!pte_present(*pdpte)){
+		rewrite_entry(pdpte, PTE_PRESENT | PTE_WRITE);
+	}
 	pte_t * pde = pte_level_addr(*pdpte) + pml2_i(virtaddr);
 	rewrite_addr_with_flags(pde, paddr, PTE_PRESENT | PTE_WRITE | PTE_LARGE);
 }
 
 void paging_init(){
-	pte_t * pml4 = (pte_t *) buddy_allocate_page(0);
+	pte_t * pml4 = (pte_t *) va(load_pml4());
+
 	for(phys_t i = 0; i < mmap_get_high_memory_level(); i += PAGE_SIZE_2M) {
 		add_map_entry(pml4, i, (virt_t) va(i));
 	}
