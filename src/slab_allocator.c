@@ -38,6 +38,8 @@ static slab_t * slab_init_small(uint64_t size, uint64_t align){
 	ret->small = NULL;
 	ret->size = size;
 	list_init(&ret->desc_list);
+	list_init(&ret->slab_list);
+	ret->pool_ptr = NULL;
 	for(virt_t i = get_aligned_addr(((virt_t)page) + sizeof(slab_t), align);
 			   i <= ((virt_t)page) + PAGE_SIZE - sizeof(slab_small_descriptor_t) + size ;
 			   i = get_aligned_addr(i + sizeof(slab_small_descriptor_t) + size,
@@ -80,6 +82,8 @@ static slab_t * slab_init_big(uint64_t size, uint64_t align){
 	ret->small = small;
 	ret->size = size;
 	list_init(&ret->desc_list);
+	list_init(&ret->slab_list);
+	ret->pool_ptr = NULL;
 	void * page = buddy_allocate_page(0);
 	if(page == NULL){
 		return NULL;
@@ -120,6 +124,10 @@ slab_t * slab_init(uint64_t size, uint64_t align){
 }
 
 void * slab_allocate(slab_t * slab){
+	if(slab->pool_ptr != NULL){
+		slab_pool * pool = (slab_pool * ) slab->pool_ptr ;
+		pool->available_blocks--;
+	}
 	if(is_small(slab->size)){
 		return slab_allocate_small(slab);
 	} else {
@@ -128,6 +136,11 @@ void * slab_allocate(slab_t * slab){
 }
 
 void slab_free(slab_t * slab, void * addr){
+	if(slab->pool_ptr != NULL){
+		slab_pool * pool = (slab_pool * ) slab->pool_ptr ;
+		pool->available_blocks++;
+		pool->current_slab = slab;
+	}
 	if(is_small(slab->size)){
 		slab_free_small(slab, addr);
 	} else {
@@ -135,3 +148,40 @@ void slab_free(slab_t * slab, void * addr){
 	}
 }
 
+void slab_pool_init(slab_pool * pool, uint64_t size, uint64_t align) {
+	pool->available_blocks = 0;
+	pool->size = size;
+	pool->align = align;
+	pool->current_slab = NULL;
+	list_init(&pool->slab_list_head);
+}
+
+static size_t get_available_blocks_num(slab_t * slab){
+	return list_size(&slab->desc_list);
+}
+
+static bool is_empty(slab_t * slab){
+	return list_empty(&slab->desc_list);
+}
+
+void * slab_pool_allocate(slab_pool * pool) {
+	if(!pool->available_blocks) {
+		slab_t * new_slab = slab_init(pool->size, pool->align);
+		new_slab->pool_ptr = pool;
+
+		list_add(&new_slab->slab_list, &pool->slab_list_head);
+		pool->available_blocks = get_available_blocks_num(new_slab);
+		pool->current_slab = new_slab;
+	}
+	void * ret = slab_allocate(pool->current_slab);
+	if(is_empty(pool->current_slab) && pool->available_blocks){
+		LIST_FOR_EACH(ptr, &pool->slab_list_head){
+			slab_t * slab = LIST_ENTRY(ptr, slab_t, slab_list);
+			if(!is_empty(slab)){
+				pool->current_slab = slab;
+				break;
+			}
+		}
+	}
+	return ret;
+}

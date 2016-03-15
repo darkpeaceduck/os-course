@@ -8,7 +8,7 @@
 #include "memory.h"
 
 typedef struct {
-	slab_t * slab;
+	slab_pool * slab_pool;
 	struct list_head list;
 }pool_desc_t;
 
@@ -41,26 +41,24 @@ void * malloc(uint64_t size){
 	}
 	LIST_FOR_EACH(i, &pools){
 		pool_desc_t * pool = LIST_ENTRY(i, pool_desc_t, list);
-		if(pool->slab->size >= size){
-			void * ptr = slab_allocate(pool->slab);
-			if(ptr){
-				return ptr;
-			}
+		if(pool->slab_pool->size >= size && size * 2 >= pool->slab_pool->size ){
+			return slab_pool_allocate(pool->slab_pool);
 		}
 	}
 
 	pool_desc_t * new_slab_desc = slab_allocate(desc_slab);
 	if(new_slab_desc){
-		slab_t * new_slab = slab_init(size, 1);
-		if(!new_slab){
+		slab_pool * new_slab_pool = (slab_pool *) slab_allocate(desc_slab);
+		if(!new_slab_pool){
 			slab_free(desc_slab, new_slab_desc);
 			return NULL;
 		}
-		new_slab_desc->slab = new_slab;
+		slab_pool_init(new_slab_pool, size, 1);
+		new_slab_desc->slab_pool = new_slab_pool;
 		list_init(&new_slab_desc->list);
 		list_add(&new_slab_desc->list, &pools);
 
-		return slab_allocate(new_slab);
+		return slab_pool_allocate(new_slab_pool);
 	}
 	return NULL;
 }
