@@ -77,4 +77,14 @@ static inline void flush_tlb(void)
 uint64_t paging_get_component_size();
 void paging_init();
 
+typedef struct{
+	phys_t phys_start;
+	virt_t virt_start;
+	uint64_t len;
+
+}paging_map_region;
+
+void paging_mmap_region(paging_map_region * region);
+void paging_ummap_region_defaut_holem(paging_map_region * region);
+
 #endif /*__PAGING_H__*/

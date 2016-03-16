@@ -7,26 +7,22 @@
 
 #define TWO_GB (0x80000000)
 
-typedef struct{
-	phys_t phys_start;
-	virt_t virt_start;
-	uint64_t page_size;
-	uint64_t len;
-
-}map_region;
-
-static map_region AFTER_HOLE = {
+static paging_map_region AFTER_HOLE = {
 	.phys_start = 0,
-	.virt_start = VA(0),
-	.page_size  = PAGE_SIZE_2M
+	.virt_start = VA(0)
 };
 
-static map_region KERNEL_HIGH = {
+static paging_map_region KERNEL_HIGH = {
 	.phys_start = 0,
 	.virt_start = KERNEL_VIRT(0),
-	.len = TWO_GB,
-	.page_size = PAGE_SIZE_2M
+	.len = TWO_GB
 };
+
+static pte_t * pml4;
+
+#define BOOT_ALLOC 0
+#define BUDDY_ALLOC 1
+static int mode = BOOT_ALLOC;
 
 
 static void rewrite_addr_with_flags(pte_t * addr, phys_t phys, int page_flags){
@@ -34,7 +30,12 @@ static void rewrite_addr_with_flags(pte_t * addr, phys_t phys, int page_flags){
 }
 
 static void rewrite_entry(pte_t * addr, int page_flags){
-	void * new_page_addr = boot_allocator_alloc(PAGE_SIZE, PAGE_SIZE);
+	void * new_page_addr;
+	if(mode == BOOT_ALLOC) {
+		new_page_addr = boot_allocator_alloc(PAGE_SIZE, PAGE_SIZE);
+	} else {
+		new_page_addr = buddy_allocate_page(0);
+	}
 	rewrite_addr_with_flags(addr, pa(new_page_addr), page_flags);
 }
 
@@ -55,30 +56,40 @@ static void recalculate_map_region_lens(){
 	AFTER_HOLE.len = mmap_get_high_memory_level();
 }
 
-static uint64_t get_region_mem(map_region * region){
-	return (region->len / region->page_size + 1) * PAGE_SIZE * 2;
+static uint64_t paging_get_region_mem(paging_map_region * region){
+	return (region->len / PAGE_SIZE_2M + 1) * PAGE_SIZE * 2;
 }
 
 uint64_t paging_get_component_size(){
 	recalculate_map_region_lens();
-	return get_region_mem(&AFTER_HOLE) +
-		   get_region_mem(&KERNEL_HIGH);
+	return paging_get_region_mem(&AFTER_HOLE) +
+		   paging_get_region_mem(&KERNEL_HIGH);
 }
 
-static void mmap_region(pte_t * pml4, map_region * region){
+void paging_mmap_region(paging_map_region * region){
 	for(phys_t i = region->phys_start;
 			i < region->phys_start + region->len;
-			i += region->page_size){
+			i += PAGE_SIZE_2M){
 		add_map_entry(pml4, i, region->virt_start + (i - region->phys_start));
 	}
+	store_pml4(pa(pml4));
+}
+
+void paging_ummap_region_defaut_holem(paging_map_region * region){
+	paging_map_region new_region = {
+			.phys_start = PA(region->virt_start),
+			.virt_start = region->virt_start,
+			.len = region->len
+	};
+	paging_mmap_region(&new_region);
 }
 
 void paging_init(){
 	recalculate_map_region_lens();
-	pte_t * pml4 = (pte_t *) va(load_pml4());
+	pml4 = (pte_t *) va(load_pml4());
 
-	mmap_region(pml4, &AFTER_HOLE);
-	mmap_region(pml4, &KERNEL_HIGH);
+	paging_mmap_region(&AFTER_HOLE);
+	paging_mmap_region(&KERNEL_HIGH);
 
-	store_pml4(pa(pml4));
+	mode = BUDDY_ALLOC;
 }
