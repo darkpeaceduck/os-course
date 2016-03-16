@@ -49,12 +49,7 @@ void * malloc(uint64_t size){
 
 	pool_desc_t * new_slab_desc = slab_allocate(desc_slab);
 	if(new_slab_desc){
-		slab_pool * new_slab_pool = (slab_pool *) slab_allocate(desc_slab);
-		if(!new_slab_pool){
-			slab_free(desc_slab, new_slab_desc);
-			return NULL;
-		}
-		slab_pool_init(new_slab_pool, size, 1);
+		slab_pool * new_slab_pool = slab_pool_init(size, 1);
 		new_slab_desc->slab_pool = new_slab_pool;
 		list_init(&new_slab_desc->list);
 		list_add(&new_slab_desc->list, &pools);

@@ -26,8 +26,9 @@ slab_t * slab_init(uint64_t size, uint64_t align);
 void * slab_allocate(slab_t * slab);
 void slab_free(slab_t * slab, void * addr);
 
-void slab_pool_init(slab_pool * pool, uint64_t size, uint64_t align);
+slab_pool * slab_pool_init(uint64_t size, uint64_t align);
 void * slab_pool_allocate(slab_pool * pool);
+void slab_pool_free(void * addr);
 
 
 

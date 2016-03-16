@@ -18,6 +18,8 @@ typedef struct {
 	virt_t addr;
 }slab_big_descriptor_t;
 
+static slab_t * slab_pool_alloc = NULL;
+
 static virt_t get_aligned_addr(virt_t addr, uint64_t align){
 	if(addr % align == 0)
 		return addr;
@@ -148,21 +150,32 @@ void slab_free(slab_t * slab, void * addr){
 	}
 }
 
-void slab_pool_init(slab_pool * pool, uint64_t size, uint64_t align) {
+static bool is_empty(slab_t * slab){
+	return list_empty(&slab->desc_list);
+}
+
+static slab_pool *  new_slab_pool(){
+	if(slab_pool_alloc == NULL || is_empty(slab_pool_alloc)){
+		slab_pool_alloc = slab_init(sizeof(slab_pool), 1);
+	}
+	return (slab_pool *) slab_allocate(slab_pool_alloc);
+}
+
+slab_pool * slab_pool_init(uint64_t size, uint64_t align) {
+	slab_pool * pool = new_slab_pool();
 	pool->available_blocks = 0;
 	pool->size = size;
 	pool->align = align;
 	pool->current_slab = NULL;
 	list_init(&pool->slab_list_head);
+	return pool;
 }
 
 static size_t get_available_blocks_num(slab_t * slab){
 	return list_size(&slab->desc_list);
 }
 
-static bool is_empty(slab_t * slab){
-	return list_empty(&slab->desc_list);
-}
+
 
 void * slab_pool_allocate(slab_pool * pool) {
 	if(!pool->available_blocks) {
@@ -184,4 +197,8 @@ void * slab_pool_allocate(slab_pool * pool) {
 		}
 	}
 	return ret;
+}
+
+void slab_pool_free(void * addr){
+	slab_free(buddy_get_slab(addr), addr);
 }
