@@ -11,15 +11,12 @@ typedef struct slab{
 	struct list_head desc_list;
 	struct list_head slab_list;
 	void * pool_ptr;
-	struct slab * small;
 }slab_t;
 
 typedef struct {
 	uint64_t size;
 	uint64_t align;
-	uint64_t available_blocks;
 	struct list_head slab_list_head;
-	slab_t * current_slab;
 }slab_pool;
 
 slab_t * slab_init(uint64_t size, uint64_t align);

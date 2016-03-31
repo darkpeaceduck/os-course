@@ -62,11 +62,12 @@ static void export_page(uint32_t page_id, uint32_t level_id){
 	list_add(&page->list_desriptors, &buddy_level_head[level_id]);
 }
 
+#include "print.h"
+
 void * buddy_allocate_page(uint32_t level){
 	for(uint32_t current_level = level; current_level < level_sz; current_level++){
-		if(!list_empty(&buddy_level_head[level])){
-
-			uint32_t new_page_id = get_page_id(LIST_ENTRY(buddy_level_head[level].next,
+		if(!list_empty(&buddy_level_head[current_level])){
+			uint32_t new_page_id = get_page_id(LIST_ENTRY(buddy_level_head[current_level].next,
 											  buddy_page_discriptor_t,
 											  list_desriptors ));
 			for(uint32_t j = current_level; j > level; j--){
@@ -87,9 +88,10 @@ void buddy_free_page(void * page){
 	uint32_t page_id = get_page_id_addr(pa(page));
 	all_discriptors[page_id].slab = NULL;
 	export_page(page_id, all_discriptors[page_id].level);
+
 	for(uint32_t j = all_discriptors[page_id].level + 1; j < level_sz; j++){
 		uint32_t buddy = get_buddy(page_id, j - 1);
-		if(!is_page_in_bounds(buddy) || !all_discriptors[buddy].available)
+		if(!is_page_in_bounds(buddy) || !all_discriptors[buddy].available || (all_discriptors[buddy].level != j - 1))
 			break;
 		import_page(page_id);
 		import_page(buddy);
@@ -110,19 +112,22 @@ int buddy_allocator_init() {
 		return -1;
 	}
 
-	for(uint32_t i = 0; i < discriptors_sz; i++){
+	for(uint64_t i = 0; i < discriptors_sz; i++){
 		all_discriptors[i].available = 0;
 		all_discriptors[i].addr = i * PAGE_SIZE;
 		all_discriptors[i].slab = NULL;
 		all_discriptors[i].level = 0;
 		list_init(&all_discriptors[i].list_desriptors);
 	}
+
+
 	for(uint32_t i = 0; i < level_sz; i++){
 		list_init(&buddy_level_head[i]);
 	}
 
 	mmap_entry_t new_page_entry;
 	new_page_entry.len = PAGE_SIZE;
+
 	for(uint32_t i = 0; i < discriptors_sz; i++){
 		new_page_entry.addr = all_discriptors[i].addr;
 		if(mmap_is_block_in_available_mem(&new_page_entry)){
