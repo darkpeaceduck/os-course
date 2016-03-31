@@ -18,4 +18,10 @@
 
 #define MAX(a, b) (a > b ? a : b)
 
+#define barrier() __asm__ volatile("" ::: "memory")
+
+#define wmb() asm volatile ("sfence" ::: "memory")
+
+
+
 #endif
