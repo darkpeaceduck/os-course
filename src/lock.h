@@ -10,6 +10,7 @@
 typedef struct {
 	uint16_t users;
 	uint16_t ticket;
+	int global;
 }ticket_lock;
 #endif
 
