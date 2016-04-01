@@ -72,8 +72,8 @@ void thread_manager_init(int32_t queues_num_arg) {
 	}
 	terminated_threads = malloc(sizeof(struct list_head));
 	list_init(terminated_threads);
-	terminated_threads_lock = lock_create();
-	threads_lock = lock_create();
+	terminated_threads_lock = lock_create(0);
+	threads_lock = lock_create(1);
 	create_helper_threads();
 }
 

@@ -14,7 +14,7 @@ typedef struct {
 }ticket_lock;
 #endif
 
-void * lock_create();
+void * lock_create(int global);
 void lock(void *);
 void unlock(void *);
 

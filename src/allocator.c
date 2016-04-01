@@ -28,7 +28,7 @@ int allocator_init(){
 		return -1;
 	}
 	list_init(&pools);
-	allocator_lock = lock_create();
+	allocator_lock = lock_create(0);
 	return 0;
 }
 
