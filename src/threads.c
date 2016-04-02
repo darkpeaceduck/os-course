@@ -213,7 +213,7 @@ static void thread_wakeup(thread_t *thread) {
 
 void thread_mutex_lock(thread_mutex * mutex) {
 	lock(threads_lock);
-	if(mutex->owner == NULL || mutex->owner == current_thread){
+	if(mutex->owner == NULL){
 		mutex->owner = current_thread;
 		unlock(threads_lock);
 	} else {
@@ -227,12 +227,13 @@ void thread_mutex_lock(thread_mutex * mutex) {
 void thread_mutex_unlock(thread_mutex * mutex) {
 	lock(threads_lock);
 	if(mutex->owner == current_thread) {
-		while(!list_empty(&mutex->sleeping_threads)){
-			thread_t * thread = LIST_ENTRY(list_first(&mutex->sleeping_threads), thread_t, list);
-			list_del(&thread->list);
-			thread_wakeup(thread);
+		thread_t * new_owner = NULL;
+		if(!list_empty(&mutex->sleeping_threads)){
+			new_owner = LIST_ENTRY(list_first(&mutex->sleeping_threads), thread_t, list);
+			list_del(&new_owner->list);
+			thread_wakeup(new_owner);
 		}
-		mutex->owner = NULL;
+		mutex->owner = new_owner;
 	}
 	unlock(threads_lock);
 }
