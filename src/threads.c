@@ -25,7 +25,7 @@ static thread_t * volatile cleaner_thread;
 
 static void * volatile threads_lock;
 
-void thread_exit(thread_t * thread) {
+void thread_cancel(thread_t * thread) {
 	lock(threads_lock);
 	if(thread->status != TERMINATED) {
 		thread->status = TERMINATED;
@@ -37,6 +37,10 @@ void thread_exit(thread_t * thread) {
 	}
 
 	unlock(threads_lock);
+}
+void thread_exit() {
+	thread_cancel(current_thread);
+	thread_yield();
 }
 
 static void * cleaner_body(void * arg) {
@@ -106,9 +110,6 @@ void try_wrapper_entry(thread_t * thread){
 
 		thread->result = thread->entry(thread->arg);
 		thread_exit(thread);
-		while(1) {
-			thread_yield();
-		}
 	}
 }
 
