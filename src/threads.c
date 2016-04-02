@@ -41,17 +41,17 @@ void thread_exit(thread_t * thread) {
 
 static void * cleaner_body(void * arg) {
 	while(1) {
-		void * freeing_stack = NULL;
+		thread_t * freeing_stack_thread = NULL;
 		lock(terminated_threads_lock);
 		if(!list_empty(terminated_threads)){
-			thread_t * thread = LIST_ENTRY(list_first(terminated_threads), thread_t, list);
-			freeing_stack = thread->stack;
-			list_del(&thread->list);
+			freeing_stack_thread = LIST_ENTRY(list_first(terminated_threads), thread_t, list);
+			list_del(&freeing_stack_thread->list);
+		}
+		if(freeing_stack_thread) {
+			free(freeing_stack_thread->stack);
+			freeing_stack_thread->stack = NULL;
 		}
 		unlock(terminated_threads_lock);
-		if(freeing_stack) {
-			free(freeing_stack);
-		}
 		thread_yield();
 	}
 	return arg;
@@ -127,7 +127,7 @@ static void switch_context(thread_t * new_thread) {
 		__asm__ volatile("movq %%rsp, %0" : "=r"(current_thread->stack));
 	}
 
-	__asm__ volatile("movq %0, %%rsp" :: "a"(new_thread->stack));
+	__asm__ volatile("movq %0, %%rsp" :: "a"(new_thread->stack) : "rsp");
 	current_thread = new_thread;
 	try_wrapper_entry(current_thread);
 
@@ -193,6 +193,18 @@ void thread_manager_callback(float delta_time) {
 	} else {
 		unlock(threads_lock);
 	}
+}
+
+void thread_destroy(thread_t * thread) {
+	lock(threads_lock);
+	lock(terminated_threads_lock);
+	list_del(&thread->list);
+	if(thread->stack) {
+		free(thread->stack);
+	}
+	free(thread);
+	unlock(terminated_threads_lock);
+	unlock(threads_lock);
 }
 
 void thread_join(thread_t * thread) {

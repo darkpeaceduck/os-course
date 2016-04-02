@@ -34,6 +34,7 @@ void thread_manager_init(int32_t queues_num);
 void thread_manager_callback(float delta_time);
 
 thread_t * thread_create(void * (*entry)(void *) , void * arg) ;
+void thread_destroy(thread_t * thread);
 void thread_yield();
 void thread_exit(thread_t * thread);
 void thread_join(thread_t * thread);

@@ -16,7 +16,7 @@
 	return;
 
 #define test_assert(assertion) \
-	if(!assertion) { \
+	if(!(assertion)) { \
 		test_fail(#assertion); \
 	}
 

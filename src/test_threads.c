@@ -34,7 +34,7 @@ static void * thread1(void * arg){
 	while(stageB != 2) {
 		thread_cond_wait(cond, mutex);
 	}
-	stageB *= 4;
+	resultB *= 4;
 	thread_mutex_unlock(mutex);
 	return arg;
 }
@@ -86,6 +86,11 @@ void *start_thread(void * arg){
 	thread_join(t2);
 	thread_join(t3);
 	check();
+	thread_destroy(t1);
+	thread_destroy(t2);
+	thread_destroy(t3);
+	thread_cond_destroy(cond);
+	thread_mutex_destroy(mutex);
 	return arg;
 }
 
