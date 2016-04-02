@@ -99,7 +99,7 @@ thread_t * thread_create(void * (*entry)(void *) , void * arg) {
 	return thread;
 }
 
-static void try_wrapper_entry(thread_t * thread){
+void try_wrapper_entry(thread_t * thread){
 	if(thread->status == READY_TO_START) {
 		thread->status = RUNNING;
 		unlock(threads_lock);
@@ -112,35 +112,7 @@ static void try_wrapper_entry(thread_t * thread){
 	}
 }
 
-static void switch_context(thread_t * new_thread) {
-	if(current_thread != NULL) {
-		__asm__ volatile(
-			"push %rbp; \
-			 push %rbx;\
-			 push %r12;\
-			 push %r13;\
-			 push %r14;\
-			 push %r15;\
-			 pushf;"
-		);
-
-		__asm__ volatile("movq %%rsp, %0" : "=r"(current_thread->stack));
-	}
-
-	__asm__ volatile("movq %0, %%rsp" :: "a"(new_thread->stack) : "rsp");
-	current_thread = new_thread;
-	try_wrapper_entry(current_thread);
-
-	__asm__ volatile(
-		"popf;\
-		 pop %r15;\
-		 pop %r14;\
-		 pop %r13;\
-		 pop %r12;\
-		 pop %rbx;\
-		 pop %rbp; "
-	);
-}
+void switch_context(thread_t * new_thread, thread_t *volatile* old_thread) ;
 
 static void thread_move_up_priority(thread_t * thread) {
 	if(thread->priority < queues_num - 1){
@@ -165,7 +137,7 @@ static void thread_manage_switch() {
 			list_del(&thread->list);
 			list_add_tail(&thread->list, &queues[i]);
 			current_thread_working_elapsed_time = quant_diff_q * (i + 1);
-			switch_context(thread);
+			switch_context(thread, &current_thread);
 			return;
 		}
 	}
