@@ -17,6 +17,7 @@ typedef struct {
 void * lock_create(int global);
 void lock(void *);
 void unlock(void *);
+void lock_set_global(void *);
 
 
 

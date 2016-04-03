@@ -88,8 +88,10 @@ void thread_manager_init(int32_t queues_num_arg) {
 	terminated_threads = malloc(sizeof(struct list_head));
 	list_init(terminated_threads);
 	terminated_threads_lock = lock_create(0);
-	threads_lock = lock_create(1);
+
+	threads_lock = lock_create(0); /* it's global but not here */
 	create_helper_threads();
+	lock_set_global(threads_lock); /* but here */
 }
 
 static thread_t * thread_allocate() {
