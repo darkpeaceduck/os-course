@@ -21,6 +21,7 @@ static const float quant_diff_q = 0.01;
 static float volatile current_thread_working_elapsed_time = 0;
 
 static thread_t * volatile current_thread = NULL;
+static thread_t * volatile main_thread ;
 static thread_t * volatile cleaner_thread;
 
 static void * volatile threads_lock;
@@ -61,7 +62,17 @@ static void * cleaner_body(void * arg) {
 	return arg;
 }
 
+static void create_main_thread() {
+	main_thread = malloc(sizeof(thread_t));
+	main_thread->status = RUNNING;
+	main_thread->priority = queues_num - 1;
+	list_init(&main_thread->list);
+	list_add_tail(&main_thread->list, &queues[main_thread->priority]);
+}
+
 static void create_helper_threads() {
+	create_main_thread();
+	current_thread = main_thread;
 	cleaner_thread = thread_create(cleaner_body, NULL);
 }
 

@@ -32,12 +32,12 @@ void main(void)
 	paging_init();
 
 	thread_manager_init(-1);
+	sti();
+
 
 	if(true) {
 		test_threads();
 	}
-
-	sti();
 
 	if(false) {
 		test_buddy();
