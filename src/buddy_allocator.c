@@ -100,6 +100,11 @@ void buddy_free_page(void * page){
 	}
 }
 
+size_t buddy_get_alocated_size(void * ptr) {
+	uint32_t page_id = get_page_id_addr(pa(ptr));
+	return PAGE_SIZE * (1 << all_discriptors[page_id].level);
+}
+
 
 
 int buddy_allocator_init() {

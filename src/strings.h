@@ -1,9 +1,10 @@
 #ifndef STRINGS_H_
 #define STRINGS_H_
 
-void itoa(char *buf, int base, int d);
-int strncmp(const char *f, const char *s, int len);
-void printf(void (*putchar)(char c), char * format, ...);
-
+#include <stddef.h>
+void memcpy(void * desc_arg, const void * src_arg, size_t size);
+size_t strlen(const char * s);
+int strcmp(const char * left, const char * right);
+int str_find_last(const char * str, char c, int limit);
 
 #endif /* STRINGS_H_ */

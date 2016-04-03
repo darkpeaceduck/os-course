@@ -15,6 +15,10 @@ void * lock_create(int global) {
 	return lock;
 }
 
+void lock_set_global(void * arg_lock) {
+	((ticket_lock *)arg_lock)->global = 1;
+}
+
 void lock(void * arg_lock) {
 	if(arg_lock == NULL ){
 		return;

@@ -38,6 +38,12 @@ static inline phys_t pa(const void *addr)
 static inline void *va(phys_t addr)
 { return (void *)VA(addr); }
 
+static inline virt_t get_aligned_addr(virt_t addr, uint64_t align){
+	if(addr % align == 0)
+		return addr;
+	return (addr / align + 1) * align;
+}
+
 #endif /*__ASM_FILE__*/
 
 #endif /*__MEMORY_H__*/

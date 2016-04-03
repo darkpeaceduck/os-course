@@ -16,7 +16,9 @@ SRC := main.c pic.c interrupt.c pit.c video.c uart.c \
 	slab_allocator.c allocator.c \
 	paging.c kmap.c \
 	lock.c threads.c \
-	test_allocator.c test_threads.c
+	tmpfs.c strings.c \
+	test_allocator.c test_threads.c\
+	initramfs.c avl_tree.c 
 OBJ := $(AOBJ) $(SRC:.c=.o)
 DEP := $(ADEP) $(SRC:.c=.d)
 

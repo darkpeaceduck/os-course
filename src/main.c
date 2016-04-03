@@ -13,10 +13,9 @@
 #include "threads.h"
 #include <stddef.h>
 #include "tests_list.h"
-
-
-
-
+#include "tmpfs.h"
+#include "strings.h"
+#include "initramfs.h"
 
 void main(void)
 {
@@ -27,15 +26,21 @@ void main(void)
 	pit_set_thread_manager_vector();
 
 	mmap_init();
+	initramfs_init();
 	allocator_init();
+
 	mmap_print();
 	paging_init();
+
+	tmpfs_mount();
+	initramfs_read_contents_push_to_tmpfs();
 
 	thread_manager_init(-1);
 	sti();
 
+	printf("OK\n");
 
-	if(true) {
+	if(false) {
 		test_threads();
 	}
 

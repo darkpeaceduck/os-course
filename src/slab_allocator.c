@@ -48,12 +48,6 @@ static slab_pool *  new_slab_pool(){
 	return (slab_pool *) slab_allocate(slab_pool_alloc);
 }
 
-static virt_t get_aligned_addr(virt_t addr, uint64_t align){
-	if(addr % align == 0)
-		return addr;
-	return (addr / align + 1) * align;
-}
-
 static int is_small(uint64_t size){
 	return size < SLAB_BIG_BOUND;
 }

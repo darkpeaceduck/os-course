@@ -8,7 +8,7 @@ static mmap_entry_t * region;
 static virt_t current_addr;
 
 void boot_allocator_init(uint64_t size){
-	region = mmap_get_entry(mmap_reserve_subblock(size));
+	region = mmap_get_entry(mmap_reserve_new_subblock(size));
 	current_addr = (virt_t) va(region->addr);
 }
 

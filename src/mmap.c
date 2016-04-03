@@ -1,7 +1,8 @@
 #include "mmap.h"
+
+#include "multiboot.h"
 #include "utils.h"
 #include "print.h"
-#include "multiboot_mmap.h"
 
 extern const uint32_t mboot_info ;
 extern char text_phys_begin [] ;
@@ -119,7 +120,7 @@ void map_insert(mmap_entry_t * entry, mmap_entry_t * new_entry){
 	regions_num += 2 - is_same;
 }
 
-int32_t mmap_reserve_subblock(uint64_t size){
+int32_t mmap_reserve_new_subblock(uint64_t size){
 	for(int i = 0; i < regions_num; i++){
 		if(!mmap_regions[i].type == REGION_AVAILABLE)
 			continue;
@@ -127,6 +128,22 @@ int32_t mmap_reserve_subblock(uint64_t size){
 					.len = size,
 					.type = REGION_RESERVED,
 					.addr = mmap_regions[i].addr
+		};
+		if(!insert_if_comparable(&mmap_regions[i], &new_entry)){
+			return i;
+		}
+	}
+	return -1;
+}
+
+int32_t mmap_reserve_subblock(void * addr, size_t size) {
+	for(int i = 0; i < regions_num; i++){
+		if(!mmap_regions[i].type == REGION_AVAILABLE)
+			continue;
+		mmap_entry_t new_entry = {
+					.len = size,
+					.type = REGION_RESERVED,
+					.addr = (uint64_t)addr
 		};
 		if(!insert_if_comparable(&mmap_regions[i], &new_entry)){
 			return i;

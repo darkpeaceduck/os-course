@@ -5,6 +5,7 @@
 #include "lock.h"
 #include "memory.h"
 #include "print.h"
+#include "tmpfs.h"
 
 #define THREAD_STACK_START_SIZE 8192
 
@@ -70,10 +71,18 @@ static void create_main_thread() {
 	list_add_tail(&main_thread->list, &queues[main_thread->priority]);
 }
 
+static void create_cleaner_thread() {
+	cleaner_thread = thread_create(cleaner_body, NULL);
+	cleaner_thread->priority = queues_num - 1;
+	list_del(&cleaner_thread->list);
+	list_add_tail(&main_thread->list, &queues[main_thread->priority]);
+}
+
 static void create_helper_threads() {
 	create_main_thread();
+	create_cleaner_thread();
+
 	current_thread = main_thread;
-	cleaner_thread = thread_create(cleaner_body, NULL);
 }
 
 void thread_manager_init(int32_t queues_num_arg) {
@@ -88,8 +97,12 @@ void thread_manager_init(int32_t queues_num_arg) {
 	terminated_threads = malloc(sizeof(struct list_head));
 	list_init(terminated_threads);
 	terminated_threads_lock = lock_create(0);
-	threads_lock = lock_create(1);
+
+	threads_lock = lock_create(0); /* it's global but not here */
 	create_helper_threads();
+	lock_set_global(threads_lock); /* but here */
+	allocator_set_sync();
+	tmpfs_set_sync();
 }
 
 static thread_t * thread_allocate() {
@@ -224,7 +237,7 @@ static void thread_wakeup(thread_t *thread) {
 
 void thread_mutex_lock(thread_mutex * mutex) {
 	lock(threads_lock);
-	if(mutex->owner == NULL){
+	if(mutex->owner == NULL || mutex->owner == current_thread){
 		mutex->owner = current_thread;
 		unlock(threads_lock);
 	} else {
