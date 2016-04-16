@@ -109,12 +109,14 @@ void initramfs_read_contents_push_to_tmpfs() {
 		if(S_ISDIR(convert(header->mode))){
 			char * dir_path = make_dir_path(path);
 			tmpfs_mkdir(dir_path);
+			free(dir_path);
 		} else {
 			char * reg_path = make_reg_path(path);
 			tmpfs_create(reg_path);
 			int fd = tmpfs_open(reg_path, OP_WRITE);
 			tmpfs_write(fd, buf, convert(header->filesize));
 			tmpfs_close(fd);
+			free(reg_path);
 		}
 	}
 }

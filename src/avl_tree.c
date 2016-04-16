@@ -11,8 +11,6 @@ typedef struct node
     struct node * right;
 }node_t;
 
-static int (*comparator)(void * left, void *right);
-
 static node_t * node_create(void * key, void * value) {
 	node_t * ret = malloc(sizeof(node_t));
 	ret->key = key;
@@ -81,14 +79,14 @@ static node_t * balance(node_t * p)
     return p;
 }
 
-static node_t * insert(node_t * p, node_t * new_node) // insert k key in a tree with p root
+static node_t * insert(node_t * p, node_t * new_node, int (*comparator)(void *, void *)) // insert k key in a tree with p root
 {
     if( !p )
     	return new_node;
     if( comparator(new_node->key, p->key) < 0 )
-        p->left = insert(p->left, new_node);
+        p->left = insert(p->left, new_node, comparator);
     else
-        p->right = insert(p->right, new_node);
+        p->right = insert(p->right, new_node, comparator);
     return balance(p);
 }
 
@@ -105,13 +103,13 @@ static node_t * removemin(node_t * p) // deleting a node with minimal key from a
     return balance(p);
 }
 
-static node_t * remove(node_t * p, void * k) // deleting k key from p tree
+static node_t * remove(node_t * p, void * k, int (*comparator)(void *, void *)) // deleting k key from p tree
 {
     if( !p ) return 0;
     if( comparator(k, p->key) < 0 )
-        p->left = remove(p->left, k);
+        p->left = remove(p->left, k, comparator);
     else if( comparator(k, p->key) > 0 )
-        p->right = remove(p->right, k);
+        p->right = remove(p->right, k, comparator);
     else //  k == p->key
     {
         node_t * q = p->left;
@@ -126,7 +124,7 @@ static node_t * remove(node_t * p, void * k) // deleting k key from p tree
     return balance(p);
 }
 
-static node_t * find(node_t * root, void * key) {
+static node_t * find(node_t * root, void * key, int (*comparator)(void *, void *)) {
 	while(1) {
 		if( comparator(key, root->key) < 0) {
 			root = root->left;
@@ -141,24 +139,21 @@ static node_t * find(node_t * root, void * key) {
 	return root;
 }
 
-void avl_tree_set_comparator(int (*comp)(void * left, void *right)) {
-	comparator = comp;
+avl_tree_t * avl_tree_create(int (*comparator)(void * left, void *right)){
+	avl_tree_t * tree = malloc(sizeof(avl_tree_t));
+	tree->comparator = comparator;
+	tree->root = NULL;
+	return tree;
 }
 
-static node_t * root;
-
-void avl_tree_create() {
-	root = NULL;
+void avl_tree_insert(avl_tree_t * tree, void * key, void * value) {
+	tree->root = insert(tree->root, node_create(key, value), tree->comparator);
 }
 
-void avl_tree_insert(void * key, void * value) {
-	root = insert(root, node_create(key, value));
+void * avl_tree_find(avl_tree_t * tree, void * key) {
+	return find(tree->root, key, tree->comparator)->value;
 }
 
-void * avl_tree_find(void * key) {
-	return find(root, key)->value;
-}
-
-void avl_tree_remove(void * key){
-	remove(root, key);
+void avl_tree_remove(avl_tree_t * tree, void * key){
+	remove(tree->root, key, tree->comparator);
 }

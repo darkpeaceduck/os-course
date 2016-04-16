@@ -12,8 +12,6 @@ typedef struct {
 	size_t size;
 }reg_file_data_t;
 
-static const size_t REG_FILE_INITIAL_SIZE = 1;
-
 typedef struct {
 	void * parent;
 	struct list_head children_head;
@@ -38,6 +36,16 @@ typedef struct {
 	size_t reading_offset;
 	void * writing_buffer;
 }file_description_t;
+
+#define MAX_OPENED_DESCRIPTORS 1000
+static file_description_t fdtable_descriptions[MAX_OPENED_DESCRIPTORS];
+static int fdtable_descriptors_stack[MAX_OPENED_DESCRIPTORS];
+static int fdtable_descriptors_stack_ptr = 0;
+
+static thread_mutex * mutex  = NULL;
+static avl_tree_t * fpaths_avl = NULL;
+
+static const size_t REG_FILE_INITIAL_SIZE = 1;
 
 static reg_file_data_t * reg_file_data_create() {
 	reg_file_data_t * reg_file_data = malloc(sizeof(reg_file_data_t));
@@ -156,11 +164,6 @@ static void file_description_init(file_description_t * file_description, fpath_n
 	file_description->type = fopen_type;
 }
 
-#define MAX_OPENED_DESCRIPTORS 1000
-static file_description_t fdtable_descriptions[MAX_OPENED_DESCRIPTORS];
-static int fdtable_descriptors_stack[MAX_OPENED_DESCRIPTORS];
-static int fdtable_descriptors_stack_ptr = 0;
-
 static file_description_t * fdtable_get_description(int fd) {
 	return &fdtable_descriptions[fd];
 }
@@ -191,28 +194,29 @@ static char * last_dir(const char * path) {
 	return new_str;
 }
 
-static void add_link(const char * path, inode_t * link) {
+static void add_link(const char * path_arg, inode_t * link) {
+	char * path = str_cpy(path_arg);
 	char * last_dir_f = last_dir(path);
 	if(last_dir_f == NULL) /* adding rootdir now */  {
-		avl_tree_insert((void *)path, fpath_node_new(link, path));
+		avl_tree_insert(fpaths_avl, (void *)path, fpath_node_new(link, path));
 	} else {
-		fpath_node_t * dir_node = avl_tree_find(last_dir_f);
+		fpath_node_t * dir_node = avl_tree_find(fpaths_avl, last_dir_f);
 		fpath_node_t * new_node_g = fpath_node_new(link, path);
-		avl_tree_insert((void *)path, new_node_g);
+		avl_tree_insert(fpaths_avl, (void *)path, new_node_g);
 		list_add(&new_node_g->sibling, &((dir_file_data_t *) dir_node->inode->file_data)->children_head);
 	}
+	free(last_dir_f);
 }
 
 static void remove_link(const char * path) {
-	fpath_node_remove(avl_tree_find((void*)path));
-	avl_tree_remove((void *)path);
+	fpath_node_remove(avl_tree_find(fpaths_avl, (void*)path));
+	avl_tree_remove(fpaths_avl, (void *)path);
 }
 
 static bool isdir_empty(const char * path) {
-	return list_empty(&((dir_file_data_t *)((fpath_node_t *)avl_tree_find((void *)path))->inode->file_data)->children_head);
+	return list_empty(&((dir_file_data_t *)(
+			(fpath_node_t *)avl_tree_find(fpaths_avl, (void *)path))->inode->file_data)->children_head);
 }
-
-static thread_mutex * mutex  = NULL;
 
 void tmpfs_set_sync() {
 	mutex = thread_mutex_create();
@@ -245,7 +249,7 @@ void tmpfs_remove(const char * path) {
 
 void tmpfs_link(const char * oldpath, const char * newpath) {
 	tmpfs_lock();
-	fpath_node_t * node = avl_tree_find((void *)oldpath);
+	fpath_node_t * node = avl_tree_find(fpaths_avl, (void *)oldpath);
 	add_link(newpath, node->inode);
 	tmpfs_unlock();
 }
@@ -253,7 +257,7 @@ void tmpfs_link(const char * oldpath, const char * newpath) {
 int tmpfs_open(const char * path, int type) {
 	tmpfs_lock();
 	int fd = fdtable_get_free();
-	file_description_init(fdtable_get_description(fd), avl_tree_find((void *)path), type);
+	file_description_init(fdtable_get_description(fd), avl_tree_find(fpaths_avl, (void *)path), type);
 	tmpfs_unlock();
 	return fd;
 }
@@ -281,7 +285,7 @@ void tmpfs_write(int fd, void * buf, size_t size) {
 
 void tmpfs_mkdir(const char * path) {
 	tmpfs_lock();
-	add_link(path, inode_new_dir(((fpath_node_t *)avl_tree_find(last_dir(path)))->inode));
+	add_link(path, inode_new_dir(((fpath_node_t *)avl_tree_find(fpaths_avl, last_dir(path)))->inode));
 	tmpfs_unlock();
 }
 
@@ -338,8 +342,7 @@ static int path_comparator(void * left, void * right) {
 }
 
 void tmpfs_mount() {
-	avl_tree_create();
-	avl_tree_set_comparator(path_comparator);
+	fpaths_avl = avl_tree_create(path_comparator);
 	fdtable_init();
 	add_link("/", inode_new_dir(NULL));
 }

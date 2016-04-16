@@ -1,5 +1,6 @@
 #include "strings.h"
 #include "print.h"
+#include "allocator.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -44,4 +45,11 @@ int str_find_last(const char * str, char c, int limit){
 		}
 	}
 	return -1;
+}
+
+char * str_cpy(const char * str) {
+	size_t old_len = strlen(str);
+	char * ret = malloc(old_len + 1);
+	memcpy(ret, str, old_len + 1);
+	return ret;
 }
