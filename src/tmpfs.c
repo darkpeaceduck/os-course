@@ -126,6 +126,7 @@ static fpath_node_t * fpath_node_new(inode_t * inode, const char * path) {
 static void fpath_node_remove(fpath_node_t * node) {
 	inode_remove_link(node->inode);
 	list_del(&node->sibling);
+	free((void *)node->file_path);
 	free(node);
 }
 
@@ -209,8 +210,8 @@ static void add_link(const char * path_arg, inode_t * link) {
 }
 
 static void remove_link(const char * path) {
-	fpath_node_remove(avl_tree_find(fpaths_avl, (void*)path));
 	avl_tree_remove(fpaths_avl, (void *)path);
+	fpath_node_remove(avl_tree_find(fpaths_avl, (void*)path));
 }
 
 static bool isdir_empty(const char * path) {
