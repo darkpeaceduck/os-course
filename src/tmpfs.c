@@ -286,7 +286,9 @@ void tmpfs_write(int fd, void * buf, size_t size) {
 
 void tmpfs_mkdir(const char * path) {
 	tmpfs_lock();
-	add_link(path, inode_new_dir(((fpath_node_t *)avl_tree_find(fpaths_avl, last_dir(path)))->inode));
+	char * last_dir_f = last_dir(path);
+	add_link(path, inode_new_dir(((fpath_node_t *)avl_tree_find(fpaths_avl, last_dir_f))->inode));
+	free(last_dir_f);
 	tmpfs_unlock();
 }
 
