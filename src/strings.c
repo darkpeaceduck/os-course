@@ -23,6 +23,16 @@ size_t strlen(const char * s) {
 	return len;
 }
 
+int strncmp(const char * left, const char * right, size_t len) {
+	for(size_t i = 0; i < len; i++) {
+		if(left[i] < right[i])
+			return -1;
+		if(left[i] > right[i])
+			return 1;
+	}
+	return 0;
+}
+
 int strcmp(const char * left, const char * right) {
 	while(!is_end(left) && !is_end(right)){
 		if(*left < *right)

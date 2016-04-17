@@ -13,6 +13,8 @@ extern const uint32_t mboot_info ;
 
 #define MBOOT_FLAG_MODS BIT(3)
 
+#define CPIO_MAGIC "070701"
+
 static void * initramfs_addr = NULL;
 static size_t initframs_size = 0;
 
@@ -22,16 +24,11 @@ static void initramfs_find_addr() {
 		return;
 	}
 	multiboot_module_t * mod = (multiboot_module_t * ) (uint64_t)mbi->mods_addr;
-	char requered_magic[6] = { '0', '7', '0', '7', '0', '1' };
 	for(uint32_t i = 0; i < mbi->mods_count; i++, mod++) {
 		size_t size = mod->mod_end - mod->mod_start + 1;
 		if(size >= sizeof(struct cpio_header)){
 			struct cpio_header * header = (struct cpio_header *)(get_aligned_addr((virt_t)mod->mod_start, 4));
-			bool neq = false;
-			for(uint32_t j = 0; j < sizeof(header->magic); j++){
-				neq |= header->magic[j] != requered_magic[j];
-			}
-			if(!neq) {
+			if(!strncmp(CPIO_MAGIC, header->magic, sizeof(header->magic))) {
 				initramfs_addr = (void *)(uint64_t)mod->mod_start;
 				initframs_size = size;
 				return;
