@@ -16,6 +16,24 @@
 #include "tmpfs.h"
 #include "strings.h"
 #include "initramfs.h"
+#include "elf.h"
+#include "tss.h"
+#include "syscall.h"
+#include "test.h"
+
+void readdir_recursive(const char * path){
+	printf("listing dir %s\n", path);
+	dir_t * dir = tmpfs_opendir(path);
+	dirent_t * dirent;
+	while((dirent = tmpfs_readdir(dir)) != NULL) {
+		printf("%s %d\n", dirent->file_path, (dirent->type == IS_DIR));
+		if(dirent->type == IS_DIR) {
+			readdir_recursive(dirent->file_path);
+		}
+	}
+	printf("ending listing dir %s\n", path);
+ 	tmpfs_closedir(dir);
+}
 
 void main(void)
 {
@@ -24,6 +42,7 @@ void main(void)
 	pit_setup();
 	uart_setup();
 	pit_set_thread_manager_vector();
+	syscall_init_handler();
 
 	mmap_init();
 	initramfs_init();
@@ -31,14 +50,21 @@ void main(void)
 
 	mmap_print();
 	paging_init();
+	tss_init();
+
 
 	tmpfs_mount();
 	initramfs_read_contents_push_to_tmpfs();
+	readdir_recursive("/");
 
 	thread_manager_init(-1);
 	sti();
 
-	printf("OK\n");
+	test_set_log(printf);
+
+	if(true) {
+		test_fork();
+	}
 
 	if(false) {
 		test_threads();
@@ -50,6 +76,6 @@ void main(void)
 	}
 
 
-
+	printf("OK, init completed\n");
 	while (1);
 }

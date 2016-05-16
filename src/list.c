@@ -18,6 +18,15 @@ void list_add(struct list_head *new, struct list_head *head)
 void list_add_tail(struct list_head *new, struct list_head *head)
 { list_insert(new, head->prev, head); }
 
+void list_merge(struct list_head *new_list_head, struct list_head * old_list_head) {
+	if (!list_empty(new_list_head) && !list_empty(old_list_head)) {
+		new_list_head->next->prev = old_list_head->prev;
+		old_list_head->prev->next = new_list_head->next;
+		old_list_head->prev = new_list_head->prev;
+		new_list_head->prev->next = old_list_head;
+	}
+}
+
 static void __list_del(struct list_head *prev, struct list_head *next)
 {
 	prev->next = next;

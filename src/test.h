@@ -1,24 +1,28 @@
 #ifndef SRC_TEST_H_
 #define SRC_TEST_H_
-#include "print.h"
+
+int (*log)(const char *format, ...);
 
 #define test_fail(...) \
-	printf("FAILED : "); \
-	printf(__VA_ARGS__); \
-	printf("\n"); \
-	sti(); \
+	log("FAILED : "); \
+	log(__VA_ARGS__); \
+	log("\n"); \
 	return;
 
 #define test_pass(...) \
-	printf("PASSED : "); \
-	printf(__VA_ARGS__); \
-	printf("\n"); \
+	log("PASSED : "); \
+	log(__VA_ARGS__); \
+	log("\n"); \
 	return;
 
 #define test_assert(assertion) \
 	if(!(assertion)) { \
 		test_fail(#assertion); \
 	}
+
+static inline void test_set_log(int (*log_arg)(const char *format, ...)) {
+	log = log_arg;
+}
 
 
 

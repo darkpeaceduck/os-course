@@ -84,7 +84,8 @@ typedef struct{
 
 }paging_map_region;
 
-void paging_mmap_region(paging_map_region * region);
+void paging_mmap_region(paging_map_region * region, int flags);
 void paging_ummap_region_defaut_holem(paging_map_region * region);
+void paging_ummap_region(paging_map_region * region);
 
 #endif /*__PAGING_H__*/

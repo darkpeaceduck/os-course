@@ -33,7 +33,7 @@ void * kmap_mmap(phys_area * area){
 		phys_segm * segm = LIST_ENTRY(ptr, phys_segm, list_segm);
 		paging_map_region new_region;
 		fill_region(&new_region, segm, virt_begin);
-		paging_mmap_region(&new_region);
+		paging_mmap_region(&new_region, PTE_WRITE);
 		virt_begin += segm->len;
 	}
 

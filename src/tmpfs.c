@@ -157,6 +157,10 @@ static void file_description_read(file_description_t * file_description, void * 
 	file_description->reading_offset += size;
 }
 
+static void file_description_seek(file_description_t * file_description, size_t offset){
+	file_description->reading_offset = offset;
+}
+
 static void file_description_init(file_description_t * file_description, fpath_node_t * node, int fopen_type) {
 	file_description->writing_buffer = malloc(REG_FILE_INITIAL_SIZE);
 	file_description->writing_offset = 0;
@@ -276,6 +280,19 @@ void tmpfs_read(int fd, void * buf, size_t size) {
 	tmpfs_lock();
 	file_description_read(fdtable_get_description(fd), buf, size);
 	tmpfs_unlock();
+}
+
+void tmpfs_seek(int fd, size_t offset) {
+	tmpfs_lock();
+	file_description_seek(fdtable_get_description(fd), offset);
+	tmpfs_unlock();
+}
+
+size_t tmpfs_get_reading_offset(int fd) {
+	tmpfs_lock();
+	size_t ret = fdtable_get_description(fd) -> reading_offset;
+	tmpfs_unlock();
+	return ret;
 }
 
 void tmpfs_write(int fd, void * buf, size_t size) {

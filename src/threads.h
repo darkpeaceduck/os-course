@@ -3,6 +3,7 @@
 
 #include "list.h"
 #include <stdint.h>
+#include "syscall_def.h"
 
 typedef enum {
 	READY_TO_START,
@@ -19,6 +20,11 @@ typedef struct {
 	thread_status status;
 	uint8_t priority;
 	struct list_head list;
+	void * proc;
+	struct list_head proc_list;
+	pid_t tid;
+	void * orig_stack;
+	void * tss_ptr;
 }thread_t;
 
 typedef struct {
@@ -34,11 +40,15 @@ void thread_manager_init(int32_t queues_num);
 void thread_manager_callback(float delta_time);
 
 thread_t * thread_create(void * (*entry)(void *) , void * arg) ;
+thread_t * thread_create_cpy(void * (*entry)(void *) , void * arg, void *proc);
+void thread_create_cpy_ready(thread_t * thread);
 void thread_destroy(thread_t * thread);
 void thread_yield();
 void thread_exit();
 void thread_cancel(thread_t * thread);
 void thread_join(thread_t * thread);
+thread_t * thread_current();
+void thread_remember_tss(void * addr);
 
 thread_mutex * thread_mutex_create();
 void thread_mutex_destroy(thread_mutex * mutex);

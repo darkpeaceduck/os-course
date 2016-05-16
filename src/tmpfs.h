@@ -36,6 +36,8 @@ void tmpfs_close(int fd);
 
 void tmpfs_read(int fd, void * buf, size_t count);
 void tmpfs_write(int fd, void * buf, size_t count);
+void tmpfs_seek(int fd, size_t offset);
+size_t tmpfs_get_reading_offset(int fd);
 
 void tmpfs_mkdir(const char * path);
 void tmpfs_rmdir(const char * path);

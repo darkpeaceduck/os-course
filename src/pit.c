@@ -7,6 +7,7 @@
 #include "video.h"
 #include "handler_wrapper.h"
 #include "threads.h"
+#include "tss.h"
 #include "print.h"
 
 DO_WRAP(default_pit_handler){

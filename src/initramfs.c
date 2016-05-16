@@ -8,6 +8,7 @@
 #include "mmap.h"
 #include "strings.h"
 #include "tmpfs.h"
+#include "print.h"
 
 extern const uint32_t mboot_info ;
 
@@ -29,7 +30,7 @@ static void initramfs_find_addr() {
 		if(size >= sizeof(struct cpio_header)){
 			struct cpio_header * header = (struct cpio_header *)(get_aligned_addr((virt_t)mod->mod_start, 4));
 			if(!strncmp(CPIO_MAGIC, header->magic, sizeof(header->magic))) {
-				initramfs_addr = (void *)(uint64_t)mod->mod_start;
+				initramfs_addr = va((uint64_t)mod->mod_start);
 				initframs_size = size;
 				return;
 			}
@@ -40,7 +41,7 @@ static void initramfs_find_addr() {
 void initramfs_init() {
 	initramfs_find_addr();
 	if ( initramfs_addr != NULL) {
-		mmap_reserve_subblock(initramfs_addr, initframs_size);
+		mmap_reserve_subblock((void *)pa(initramfs_addr), initframs_size);
 	}
 }
 

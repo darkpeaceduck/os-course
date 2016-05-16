@@ -5,7 +5,7 @@
 #define SPLICE(x, begin, end) (x >> begin) & (BIT(end - begin) - 1)
 #define LOW(x, mod) SPLICE(x, 0, mod)
 
-#define STR(name) #name
+#define STR(...) #__VA_ARGS__
 #define EXPAND(name) STR(name)
 
 #define VOID_FUNC(name) void name()

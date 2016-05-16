@@ -6,6 +6,10 @@
 #include "memory.h"
 #include "print.h"
 #include "tmpfs.h"
+#include "process.h"
+#include "strings.h"
+#include "tss.h"
+
 
 #define THREAD_STACK_START_SIZE 8192
 
@@ -27,9 +31,12 @@ static thread_t * volatile cleaner_thread;
 
 static void * volatile threads_lock;
 
+static volatile pid_t last_tid = 1;
+
 void thread_cancel(thread_t * thread) {
 	lock(threads_lock);
 	if(thread->status != TERMINATED) {
+		process_remove_thread(thread);
 		thread->status = TERMINATED;
 		list_del(&thread->list);
 
@@ -67,7 +74,10 @@ static void create_main_thread() {
 	main_thread = malloc(sizeof(thread_t));
 	main_thread->status = RUNNING;
 	main_thread->priority = queues_num - 1;
+	main_thread->tid = last_tid++;
+	main_thread->stack = main_thread->orig_stack = get_rsp();
 	list_init(&main_thread->list);
+	list_init(&main_thread->proc_list);
 	list_add_tail(&main_thread->list, &queues[main_thread->priority]);
 }
 
@@ -81,7 +91,8 @@ static void create_cleaner_thread() {
 static void create_helper_threads() {
 	create_main_thread();
 	create_cleaner_thread();
-
+	process_assign_thread(process_create(), main_thread);
+	process_assign_thread(process_create(), cleaner_thread);
 	current_thread = main_thread;
 }
 
@@ -106,12 +117,19 @@ void thread_manager_init(int32_t queues_num_arg) {
 }
 
 static thread_t * thread_allocate() {
-	thread_t * thread = (thread_t *) malloc(sizeof(thread_t));
-	thread->stack = (void *)((virt_t)malloc(THREAD_STACK_START_SIZE) + THREAD_STACK_START_SIZE - 1);
+	thread_t * thread = malloc(sizeof(thread_t));
+	thread->tss_ptr = thread->orig_stack = thread->stack =
+			(void *)((virt_t)malloc(THREAD_STACK_START_SIZE) + THREAD_STACK_START_SIZE - 1);
 	return thread;
 }
 
 thread_t * thread_create(void * (*entry)(void *) , void * arg) {
+	thread_t * thread = thread_create_cpy(entry, arg, process_current());
+	thread_create_cpy_ready(thread);
+	return thread;
+}
+
+thread_t * thread_create_cpy(void * (*entry)(void *) , void * arg, void * proc) {
 	lock(threads_lock);
 	thread_t * thread = thread_allocate();
 
@@ -120,14 +138,27 @@ thread_t * thread_create(void * (*entry)(void *) , void * arg) {
 	thread->result = NULL;
 	thread->status = READY_TO_START;
 	thread->priority = 0;
+	thread->tid = last_tid++;
+	list_init(&thread->proc_list);
 	list_init(&thread->list);
-	list_add_tail(&thread->list, &queues[thread->priority]);
+
+	if (proc != NULL) {
+		process_assign_thread(proc, thread);
+	}
 
 	unlock(threads_lock);
 	return thread;
 }
 
-void try_wrapper_entry(thread_t * thread){
+void thread_create_cpy_ready(thread_t * thread) {
+	lock(threads_lock);
+	list_add_tail(&thread->list, &queues[thread->priority]);
+	unlock(threads_lock);
+}
+
+void try_wrapper_entry(thread_t * old_thread, thread_t * thread){
+	process_switch(old_thread->proc, thread->proc);
+	tss_write_kernel_rsp(thread->tss_ptr);
 	if(thread->status == READY_TO_START) {
 		thread->status = RUNNING;
 		unlock(threads_lock);
@@ -300,4 +331,13 @@ void thread_cond_broadcast(thread_cond * cond) {
 		thread_wakeup(thread);
 	}
 	unlock(threads_lock);
+}
+
+thread_t * thread_current() {
+	return current_thread;
+}
+
+void thread_remember_tss(void *addr) {
+	current_thread->tss_ptr = addr;
+	tss_write_kernel_rsp(addr);
 }

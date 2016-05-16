@@ -48,5 +48,6 @@ static inline void cld() {
 
 void idt_setup();
 void idt_set_gate(uint8_t id, uint64_t adress, uint16_t selector, uint8_t type);
+void idt_set_gate_dpl(uint8_t id, uint64_t adress, uint16_t selector, uint8_t type, int dpl);
 
 #endif /*__INTERRUPT_H__*/

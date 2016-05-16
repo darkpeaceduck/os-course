@@ -12,6 +12,13 @@ void memcpy(void * desc_arg, const void * src_arg, size_t size) {
 	}
 }
 
+void memset(void * desc_arg, char value, size_t size) {
+	char * desc = desc_arg;
+	for(size_t i = 0; i < size; i++) {
+		desc[i] = value;
+	}
+}
+
 static bool is_end(const char * s){
 	return *s == '\0';
 }

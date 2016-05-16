@@ -18,21 +18,21 @@ typedef struct {
 
 static slab_t * desc_slab;
 static struct list_head pools;
-static thread_mutex * allocator_mutex = NULL;
+static void * allocator_lock;
 
 void allocator_set_sync() {
-	allocator_mutex = thread_mutex_create();
+	allocator_lock = thread_mutex_create();
 }
 
-static void allocator_mutex_lock() {
-	if(allocator_mutex != NULL) {
-		thread_mutex_lock(allocator_mutex);
+static void allocator_sync_lock() {
+	if(allocator_lock != NULL) {
+		lock(allocator_lock);
 	}
 }
 
-static void allocator_mutex_unlock() {
-	if (allocator_mutex != NULL) {
-		thread_mutex_unlock(allocator_mutex);
+static void allocator_sync_unlock() {
+	if (allocator_lock != NULL) {
+		unlock(allocator_lock);
 	}
 }
 
@@ -57,16 +57,16 @@ static int get_page_level(uint64_t size){
 }
 
 void * malloc(uint64_t size){
-	allocator_mutex_lock();
+	allocator_sync_lock();
 	if(size >= PAGE_SIZE){
-		unlock(allocator_mutex);
+		allocator_sync_unlock();
 		return buddy_allocate_page(get_page_level(size));
 	}
 	LIST_FOR_EACH(i, &pools){
 		pool_desc_t * pool = LIST_ENTRY(i, pool_desc_t, list);
 		if(pool->slab_pool->size >= size && size * 2 >= pool->slab_pool->size ){
 			void * ret = slab_pool_allocate(pool->slab_pool);
-			allocator_mutex_unlock();
+			allocator_sync_unlock();
 			return ret;
 		}
 	}
@@ -78,27 +78,32 @@ void * malloc(uint64_t size){
 		list_init(&new_slab_desc->list);
 		list_add(&new_slab_desc->list, &pools);
 		void * ret = slab_pool_allocate(new_slab_pool);
-		allocator_mutex_unlock();
+		allocator_sync_unlock();
 		return ret;
 	}
 
-	allocator_mutex_unlock();
+	allocator_sync_unlock();
 	return NULL;
 }
 
+void * malloc_aligned(size_t size, int64_t align) {
+	void * mem = malloc(size + align);
+	return (void *)get_aligned_addr((virt_t)mem, align);
+}
+
 void free(void * ptr){
-	allocator_mutex_lock();
+	allocator_sync_lock();
 	slab_t * slab = buddy_get_slab(ptr);
 	if(slab == NULL){
 		buddy_free_page(ptr);
 	} else {
 		slab_free(slab, ptr);
 	}
-	allocator_mutex_unlock();
+	allocator_sync_unlock();
 }
 
 void * realloc(void * ptr, uint64_t new_size) {
-	allocator_mutex_lock();
+	allocator_sync_lock();
 	slab_t * slab = buddy_get_slab(ptr);
 	size_t size = 0;
 	if(slab == NULL) {
@@ -107,13 +112,13 @@ void * realloc(void * ptr, uint64_t new_size) {
 		size = slab->size;
 	}
 	if (new_size <= size) {
-		allocator_mutex_unlock();
+		allocator_sync_unlock();
 		return ptr;
 	}
 	void * new_ptr = malloc(new_size);
 	memcpy(new_ptr, ptr, size);
 	free(ptr);
-	allocator_mutex_unlock();
+	allocator_sync_unlock();
 	return new_ptr;
 }
 
