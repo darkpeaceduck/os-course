@@ -27,7 +27,7 @@ SYSCALL_DO_WRAP(syscall_handler){
 	void * param;
 	__asm__ volatile("mov %%rax, %0" : "=m"(num));
 	__asm__ volatile("mov %%rbx, %0" : "=m"(param));
-	uint64_t code = syscall_dispatcher(num, param);
+	int64_t code = syscall_dispatcher(num, param);
 	__asm__ volatile("mov %0, %%rax"::"m"(code));
 }
 

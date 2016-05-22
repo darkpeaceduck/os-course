@@ -7,11 +7,11 @@
 
 int sprintf(char *s, const char *format, ...);
 
-uint64_t syscall(uint64_t param, void * data) {
+int64_t syscall(uint64_t param, void * data) {
 	__asm__ volatile("mov %0, %%rax" :: "m"(param));
 	__asm__ volatile("mov %0, %%rbx" :: "m"(data));
 	__asm__ volatile("int $"EXPAND(SYSCALL_INTERRUPT_NUMB));
-	uint64_t ret;
+	int64_t ret;
 	__asm__ volatile("mov %%rax, %0" : "=m"(ret));
 	return ret;
 }
@@ -29,7 +29,7 @@ int uprintf(const char * format, ...) {
 }
 
 int fork(uint64_t *param) {
-	uint64_t ret = syscall(1, NULL);
+	int64_t ret = syscall(1, NULL);
 	if(ret == SYSCALL_WRONG_ARG)
 		return -1;
 	*param = ret;

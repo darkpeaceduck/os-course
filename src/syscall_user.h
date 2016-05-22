@@ -4,7 +4,7 @@
 #include "syscall_def.h"
 #include <stdint.h>
 
-uint64_t syscall(uint64_t param, void * data);
+int64_t syscall(uint64_t param, void * data);
 int uprintf(const char * format, ...);
 int fork(uint64_t *param);
 
