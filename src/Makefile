@@ -1,5 +1,5 @@
-CC ?= gcc
-LD ?= gcc
+CC = gcc-4.8
+LD = gcc-4.8
 
 MAKE:=make
 CFLAGS := -g -m64 -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -ffreestanding \
