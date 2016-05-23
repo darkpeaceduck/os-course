@@ -5,7 +5,9 @@
 #define SYSCALL_DPL 3
 #define SYSCALL_WRONG_ARG -1
 
+#ifndef __ASSEMBLY__
 typedef int pid_t;
+#endif
 
 
 

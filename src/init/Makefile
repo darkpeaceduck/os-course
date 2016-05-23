@@ -5,7 +5,7 @@ FLAGS=-mno-red-zone -mno-mmx -mno-sse -mno-sse2 -ffreestanding -Wall -Wextra -We
 all:init
 
 init:init.o test_fork.o
-	$(LD) -T init.ld -o init init.o test_fork.o ../syscall_user.o ../print.o ../strings.o --unresolved-symbols=ignore-all
+	$(LD) -T init.ld -o init init.o test_fork.o ../syscall_user.o ../print.o ../strings.o ../syscall_s.o --unresolved-symbols=ignore-all
 init.o:init.c
 	$(CC)  -c init.c $(FLAGS) 
 test_fork.o:test_fork.c

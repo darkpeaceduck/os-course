@@ -7,7 +7,7 @@
 #include "interrupt.h"
 #include "tss.h"
 
-static int syscall_dispatcher(int num, void * param) {
+int syscall_dispatcher(int num, void * param) {
 	int ret = 0;
 	switch(num){
 	case 0:
@@ -22,14 +22,7 @@ static int syscall_dispatcher(int num, void * param) {
 	return ret;
 }
 
-SYSCALL_DO_WRAP(syscall_handler){
-	uint64_t num;
-	void * param;
-	__asm__ volatile("mov %%rax, %0" : "=m"(num) :: "memory", "rax");
-	__asm__ volatile("mov %%rbx, %0" : "=m"(param) :: "memory", "rbx");
-	int64_t code = syscall_dispatcher(num, param);
-	__asm__ volatile("mov %0, %%rax"::"m"(code) : "rax");
-}
+SYSCALL_DO_WRAP(syscall_handler);
 
 
 int sys_exec(const char * path) {
