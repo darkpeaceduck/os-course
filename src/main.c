@@ -21,6 +21,8 @@
 #include "syscall.h"
 #include "test.h"
 
+#define INIT_PATH "/initramfs/init"
+
 void readdir_recursive(const char * path){
 	printf("listing dir %s\n", path);
 	dir_t * dir = tmpfs_opendir(path);
@@ -33,6 +35,10 @@ void readdir_recursive(const char * path){
 	}
 	printf("ending listing dir %s\n", path);
  	tmpfs_closedir(dir);
+}
+
+void exec_init() {
+	sys_exec(INIT_PATH);
 }
 
 void main(void)
@@ -62,10 +68,6 @@ void main(void)
 
 	test_set_log(printf);
 
-	if(true) {
-		test_fork();
-	}
-
 	if(false) {
 		test_threads();
 	}
@@ -75,7 +77,7 @@ void main(void)
 		test_slab();
 	}
 
-
-	printf("OK, init completed\n");
+	printf("OK, init completed, running init now\n");
+	exec_init();
 	while (1);
 }

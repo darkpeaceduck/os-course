@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "memory.h"
+#include "list.h"
 
 typedef uint64_t pte_t;
 
@@ -87,5 +88,6 @@ typedef struct{
 void paging_mmap_region(paging_map_region * region, int flags);
 void paging_ummap_region_defaut_holem(paging_map_region * region);
 void paging_ummap_region(paging_map_region * region);
+pte_t * paging_create_newpml_from_process_mm_list(struct list_head *head);
 
 #endif /*__PAGING_H__*/

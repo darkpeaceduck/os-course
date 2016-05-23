@@ -20,7 +20,7 @@ SRC := main.c pic.c interrupt.c pit.c video.c uart.c \
 	tmpfs.c strings.c \
 	test_allocator.c test_threads.c\
 	initramfs.c avl_tree.c process.c elf.c syscall.c tss.c handler_wrapper.c \
-	test_fork.c  syscall_user.c
+	syscall_user.c
 
 OBJ := $(AOBJ) $(SRC:.c=.o)
 DEP := $(ADEP) $(SRC:.c=.d)

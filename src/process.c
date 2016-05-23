@@ -36,7 +36,12 @@ process * process_create() {
 	list_init(&ret->user_mm_list_head);
 	list_init(&ret->threads_list);
 	ret->user_stack = NULL;
+	ret->pt = NULL;
 	return ret;
+}
+
+static void process_create_pt(process * proc) {
+	proc->pt = paging_create_newpml_from_process_mm_list(&proc->user_mm_list_head);
 }
 
 static void process_create_user_stack(process * proc) {
@@ -56,6 +61,7 @@ void process_set_user_image(process * proc, elf_contents * contents) {
 	proc->user_mm_list_head.next->prev = &proc->user_mm_list_head;
 	proc->user_mm_list_head.prev->next = &proc->user_mm_list_head;
 	process_create_user_stack(proc);
+	process_create_pt(proc);
 	proc->user_entry = contents->entry;
 	destroy_elf_contents(contents);
 }
@@ -110,6 +116,7 @@ int process_fork() {
 						&new_process->user_mm_list_head);
 		}
 	}
+	process_create_pt(new_process);
 
 	userspace_jumping_args * stack_args = (userspace_jumping_args * )tss_read_kernel_rsp();
 	thread_t * thread = thread_create_cpy(jump_userspace_fork, NULL, new_process);
@@ -123,14 +130,9 @@ int process_fork() {
 }
 
 void process_switch(process * current_process, process * next_process) {
-	LIST_FOR_EACH(ptr, (&current_process->user_mm_list_head)) {
-		p_mm_entry * entry = LIST_ENTRY(ptr, p_mm_entry, list);
-		paging_ummap_region(&entry->region);
-	}
-	LIST_FOR_EACH(ptr, (&next_process->user_mm_list_head)) {
-		p_mm_entry * entry = LIST_ENTRY(ptr, p_mm_entry, list);
-		paging_mmap_region(&entry->region, PTE_WRITE | PTE_USER);
-	}
+	(void)(current_process);
+	if(next_process->pt != NULL)
+		store_pml4(pa(next_process->pt));
 }
 
 process * process_current() {

@@ -24,6 +24,7 @@ typedef struct{
 	virt_t user_stack_low_begin;
 	struct list_head threads_list;
 	virt_t user_entry;
+	pte_t * pt;
 }process;
 
 p_mm_entry * create_p_mm_entry(virt_t user_virt, phys_t paddr, size_t size, mm_entry_type type);
