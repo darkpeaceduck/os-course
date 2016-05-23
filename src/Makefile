@@ -1,9 +1,9 @@
-CC = gcc-4.8
-LD = gcc-4.8
+CC ?= gcc
+LD ?= gcc
 
 MAKE:=make
 CFLAGS := -g -m64 -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -ffreestanding \
-	-mcmodel=kernel -Wall -Wextra -Werror -pedantic -std=c11 \
+	-mcmodel=kernel -Wall -Wextra -pedantic -std=c11 \
 	-Wframe-larger-than=4096 -Wstack-usage=4096 -Wno-unknown-warning-option
 LFLAGS := -nostdlib -z max-page-size=0x1000
 
