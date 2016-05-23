@@ -12,7 +12,7 @@ int64_t syscall(uint64_t param, void * data) {
 	__asm__ volatile("mov %0, %%rbx" :: "m"(data) : "rbx");
 	__asm__ volatile("int $"EXPAND(SYSCALL_INTERRUPT_NUMB));
 	int64_t ret;
-	__asm__ volatile("mov %%rax, %0" : "=m"(ret) :: "memory");
+	__asm__ volatile("mov %%rax, %0" : "=m"(ret) :: "memory", "rax");
 	return ret;
 }
 
