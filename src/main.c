@@ -37,8 +37,9 @@ void readdir_recursive(const char * path){
  	tmpfs_closedir(dir);
 }
 
-void exec_init() {
+void * exec_init(void * arg) {
 	sys_exec(INIT_PATH);
+	return arg;
 }
 
 void main(void)
@@ -78,6 +79,6 @@ void main(void)
 	}
 
 	printf("OK, init completed, running init now\n");
-	exec_init();
+	thread_create(exec_init, NULL);
 	while (1);
 }
