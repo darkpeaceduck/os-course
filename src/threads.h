@@ -12,6 +12,11 @@ typedef enum {
 	TERMINATED
 } thread_status;
 
+typedef enum {
+	COMMON,
+	HELPER
+}thread_type;
+
 typedef struct {
 	void * stack;
 	void * (*entry)(void *) ;
@@ -25,6 +30,7 @@ typedef struct {
 	pid_t tid;
 	void * orig_stack;
 	void * tss_ptr;
+	thread_type type;
 }thread_t;
 
 typedef struct {

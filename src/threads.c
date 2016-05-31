@@ -76,6 +76,7 @@ static void create_main_thread() {
 	main_thread->priority = queues_num - 1;
 	main_thread->tid = last_tid++;
 	main_thread->stack = main_thread->orig_stack = get_rsp();
+	main_thread->type = HELPER;
 	list_init(&main_thread->list);
 	list_init(&main_thread->proc_list);
 	list_add_tail(&main_thread->list, &queues[main_thread->priority]);
@@ -84,6 +85,7 @@ static void create_main_thread() {
 static void create_cleaner_thread() {
 	cleaner_thread = thread_create(cleaner_body, NULL);
 	cleaner_thread->priority = queues_num - 1;
+	cleaner_thread->type = HELPER;
 	list_del(&cleaner_thread->list);
 	list_add_tail(&main_thread->list, &queues[main_thread->priority]);
 }
@@ -139,6 +141,7 @@ thread_t * thread_create_cpy(void * (*entry)(void *) , void * arg, void * proc) 
 	thread->status = READY_TO_START;
 	thread->priority = 0;
 	thread->tid = last_tid++;
+	thread->type = COMMON;
 	list_init(&thread->proc_list);
 	list_init(&thread->list);
 
@@ -186,17 +189,29 @@ static void thread_down_up_priority(thread_t * thread) {
 	}
 }
 
-static void thread_manage_switch() {
+static void thread_manage_switch_execute(thread_t * thread, size_t queue_index) {
+	list_del(&thread->list);
+	list_add_tail(&thread->list, &queues[queue_index]);
+	current_thread_working_elapsed_time = quant_diff_q * (queue_index + 1);
+	switch_context(thread, &current_thread);
+}
+
+static bool thread_manage_switch_for_type(thread_type expected_type){
 	for(size_t i = 0; i < queues_num; i++) {
 		if(!list_empty(&queues[i])) {
 			thread_t * thread = LIST_ENTRY(list_first(&queues[i]), thread_t, list);
-			list_del(&thread->list);
-			list_add_tail(&thread->list, &queues[i]);
-			current_thread_working_elapsed_time = quant_diff_q * (i + 1);
-			switch_context(thread, &current_thread);
-			return;
+			if (thread->type == expected_type) {
+				thread_manage_switch_execute(thread, i);
+				return 1;
+			}
 		}
 	}
+	return 0;
+}
+
+static void thread_manage_switch() {
+	if (!thread_manage_switch_for_type(COMMON))
+		thread_manage_switch_for_type(HELPER);
 }
 
 void thread_yield() {
