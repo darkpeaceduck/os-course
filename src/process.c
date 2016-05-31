@@ -8,6 +8,8 @@
 #include "print.h"
 #include "tss.h"
 #include "strings.h"
+#include "utils.h"
+#include "interrupt.h"
 #include "handler_wrapper.h"
 
 #define USERSPACE_STACK_DEFAULT_SIZE PAGE_SIZE_2M
@@ -67,6 +69,7 @@ void process_set_user_image(process * proc, elf_contents * contents) {
 }
 
 void process_jump_user() {
+	cli();
 	process * current_process = process_current();
 	process_switch(current_process, current_process);
 	userspace_jumping_args args  = {
