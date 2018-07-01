@@ -4,7 +4,7 @@ LD ?= gcc
 MAKE:=make
 CFLAGS := -g -m64 -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -ffreestanding \
 	-mcmodel=kernel -Wall -Wextra -pedantic -std=c11 \
-	-Wframe-larger-than=4096 -Wstack-usage=4096 -Wno-unknown-warning-option
+	-Wframe-larger-than=4096 -Wstack-usage=4096 -fno-pie
 LFLAGS := -nostdlib -z max-page-size=0x1000
 
 ASM := bootstrap.S videomem.S threads_s.S syscall_s.S
