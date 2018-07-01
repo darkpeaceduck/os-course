@@ -1,6 +1,10 @@
 #ifndef __INITRAMFS_H__
 #define __INITRAMFS_H__
 
+
+#include <stddef.h>
+
+
 #define S_IFMT	0xF000
 #define S_IFDIR	0x4000
 #define S_IFREG	0x8000
@@ -26,5 +30,10 @@ struct cpio_header {
 	char namesize[8];
 	char chksum[8];
 } __attribute__((packed));
+
+
+void initramfs_init();
+void initramfs_read_contents_push_to_tmpfs();
+
 
 #endif /*__INITRAMFS_H__*/

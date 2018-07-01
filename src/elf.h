@@ -2,6 +2,8 @@
 #define __ELF_H__
 
 #include <stdint.h>
+#include "list.h"
+#include "memory.h"
 
 #define ELF_NIDENT      16
 #define ELF_CLASS       4
@@ -44,5 +46,16 @@ struct elf_phdr {
 	uint64_t p_memsz;
 	uint64_t p_align;
 } __attribute__((packed));
+
+
+typedef struct {
+	virt_t entry;
+	struct list_head mm_list_head;
+}elf_contents;
+
+elf_contents * parse_elf(const char * path);
+elf_contents * create_elf_contents();
+void destroy_elf_contents(elf_contents * contents);
+
 
 #endif /*__ELF_H__*/
